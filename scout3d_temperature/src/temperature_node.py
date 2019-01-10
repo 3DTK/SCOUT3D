@@ -3,7 +3,7 @@
 import rospy
 import smbus
 import time
-from temperature.msg import temperature_humidity
+from scout3d_temperature.msg import TemperatureHumidity
 
 def readTempSensor():
     # Get I2C bus
@@ -38,14 +38,14 @@ def readTempSensor():
 
     # Convert the data
     cTemp = ((data0 * 256 + data1) * 175.72 / 65536.0) - 46.85
-    msg = temperature_humidity()
+    msg = TemperatureHumidity()
     msg.timestamp = rospy.Time.now()
     msg.temperature = cTemp
     msg.humidity = humidity
     return (msg)
 
 def publishTemp():
-    pub = rospy.Publisher('temperature', temperature_humidity, queue_size=10)
+    pub = rospy.Publisher('temperature', TemperatureHumidity, queue_size=10)
     rospy.init_node('temperature_node', anonymous=True)
     rate = rospy.Rate(1) # 1hz
     while not rospy.is_shutdown():

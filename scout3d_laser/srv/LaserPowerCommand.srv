@@ -1,0 +1,4 @@
+int8 laser_mode
+float32 green_power
+float32 blue_power
+---
