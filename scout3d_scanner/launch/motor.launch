@@ -1,0 +1,5 @@
+<launch>
+  <group ns="motor">
+    <node pkg="scout3d_motor" type="motor_node.py" name="motor_node"/>
+  </group>
+</launch>

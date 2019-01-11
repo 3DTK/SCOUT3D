@@ -1,0 +1,2 @@
+#! /bin/bash
+tmux new-session -d -s scanner 'export ROS_MASTER_URI=http://scanner-camera.local:11311;source /home/laser/ROS/devel/setup.bash;roslaunch --wait scout3d_scanner motor.launch'
