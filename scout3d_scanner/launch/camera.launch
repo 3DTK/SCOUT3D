@@ -1,0 +1,35 @@
+<launch>
+  <group ns="camera">
+    <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager" args="manager" />
+
+    <node pkg="nodelet" type="nodelet" name="camera_nodelet" args="load pointgrey_camera_driver/PointGreyCameraNodelet camera_nodelet_manager" >
+      <param name="frame_id" value="camera" />
+      <param name="serial" value="0" />
+      <param name="frame_rate" value="15" />
+      <param name="enable_strobe1" value="true" />
+      <param name="strobe1_duration" value="0.0" />
+      <param name="auto_white_balance" value="true" />
+      <param name="auto_exposure" value="false" />
+      <param name="auto_gain" value="false" />
+      <param name="auto_shutter" value="false" />
+      <param name="brightness" value="0.0" />
+      <param name="gain" value="0.0" />
+      <param name="shutter_speed" value="0.01" />
+    </node>
+
+    <node pkg="nodelet" type="nodelet" name="image_proc_debayer" args="load image_proc/debayer camera_nodelet_manager" />
+
+    <node pkg="nodelet" type="nodelet" name="imu_manager" args="manager" output="screen" />
+
+    <node pkg="nodelet" type="nodelet" name="PhidgetsImuNodelet" args="load phidgets_imu/PhidgetsImuNodelet imu_manager" output="screen" >
+      # supported data rates: 4 8 16 24 32 40 ... 1000 (in ms)
+      <param name="period" value="4" />
+      <param name="frame_id" value="imu_camera" />
+    </node>
+
+    <node pkg="nodelet" type="nodelet" name="ImuFilterNodelet" args="load imu_filter_madgwick/ImuFilterNodelet imu_manager" output="screen" >
+      <param name="use_mag" value="true" />
+      <param name="publish_tf" value="false" />
+    </node>
+  </group>
+</launch>
