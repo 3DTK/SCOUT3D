@@ -1,0 +1,5 @@
+<launch>
+  <node pkg="scout3d_scanner" type="scanner_node" name="scanner_node">
+    <param name="configuration_file" value="$(find scout3d_scanner)/calibration/calibration_air.xml" />
+  </node>
+</launch>

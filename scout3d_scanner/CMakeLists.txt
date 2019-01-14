@@ -17,6 +17,16 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
 )
 
+find_package(3DTK)
+if(${3DTK_FOUND})
+  find_package(OpenMP REQUIRED)
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+
+  message("3DTK found. Building with 3DTK support!")
+else()
+  message("3DTK not found. Building without 3DTK support!")
+endif()
+
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 
@@ -127,6 +137,16 @@ include_directories(
 ## bag2images
 add_executable(bag2images src/bag2images.cc)
 target_link_libraries(bag2images ${catkin_LIBRARIES})
+
+if(${3DTK_FOUND})
+  include_directories(${3DTK_INCLUDE_DIRS})
+
+  add_executable(scanner_node src/scanner_node.cc)
+  target_link_libraries(scanner_node
+    ${catkin_LIBRARIES}
+    reconstruct_processing
+  )
+endif()
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
