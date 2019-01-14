@@ -8,6 +8,7 @@ project(scout3d_scanner)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  scout3d_motor
   cv_bridge
   image_transport
   tf
@@ -119,7 +120,7 @@ endif()
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES scout3d_scanner
-  CATKIN_DEPENDS cv_bridge image_transport tf tf_conversions pcl_conversions rosbag pcl_ros
+  CATKIN_DEPENDS scout3d_motor cv_bridge image_transport tf tf_conversions pcl_conversions rosbag pcl_ros
 #  DEPENDS system_lib
 )
 

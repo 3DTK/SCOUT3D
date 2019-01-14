@@ -1,4 +1,5 @@
 #include "reconstruct/processing/ImageProcessor.h"
+#include <scout3d_motor/MotorPosition.h>
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
 #include <std_msgs/Float32.h>
@@ -10,9 +11,9 @@
 ros::Publisher publisher;
 ImageProcessor* processor;
 
-void motorPositionCallback(const std_msgs::Float32::ConstPtr& msg)
+void motorPositionCallback(const scout3d_motor::MotorPosition::ConstPtr& msg)
 {
-    Eigen::Affine3d transform = Eigen::Affine3d(Eigen::AngleAxisd(-msg->data * M_PI / 180.0, Eigen::Vector3d(0, 0, 1)));
+    Eigen::Affine3d transform = Eigen::Affine3d(Eigen::AngleAxisd(-msg->position * M_PI / 180.0, Eigen::Vector3d(0, 0, 1)));
     Eigen::Affine3d calibTrafo = Eigen::Affine3d::Identity();
     calibTrafo.translate(Eigen::Vector3d(0,-0.188,0));
     calibTrafo = calibTrafo * Eigen::Affine3d(Eigen::AngleAxisd(-14.15 * M_PI / 180.0, Eigen::Vector3d(0, 0, 1)));
@@ -22,7 +23,7 @@ void motorPositionCallback(const std_msgs::Float32::ConstPtr& msg)
     tf::transformEigenToTF(Eigen::Affine3d(pose), rosTF);
 
     tf::StampedTransform trans;
-    trans = tf::StampedTransform(rosTF, ros::Time::now(), "/scanner_base", "/camera");
+    trans = tf::StampedTransform(rosTF, msg->timestamp, "/scanner_base", "/camera");
 
     static tf::TransformBroadcaster br;
     br.sendTransform(trans);

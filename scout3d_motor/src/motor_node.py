@@ -6,6 +6,7 @@ import threading
 import subprocess
 import math
 from std_msgs.msg import Float32
+from scout3d_motor.msg import MotorPosition
 from scout3d_motor.srv import MotorPositionCommand
 
 def setZero(arg):
@@ -26,7 +27,11 @@ def updatePosition():
     while not rospy.is_shutdown():
         position = int(subprocess.check_output(["/home/laser/getMotorPosition", ""]))
         positionDeg = 90.0 * float(position) / 5000.0
-        pub.publish(positionDeg)
+
+        msg = MotorPosition()
+        msg.timestamp = rospy.Time.now()
+        msg.position = positionDeg
+        pub.publish(msg)
         # print('position: ' + str(positionDeg) + ' (' + str(position) + ')')
         if not math.isnan(setpoint):
             if setpoint != position:
@@ -41,7 +46,7 @@ if __name__ == '__main__':
     global setpoint
     setpoint = float('nan')
     rospy.init_node('motor_node', anonymous=True)
-    pub = rospy.Publisher('motorPosition', Float32, queue_size=10)
+    pub = rospy.Publisher('motorPosition', MotorPosition, queue_size=10)
     serPos = rospy.Service('setMotorPosition', MotorPositionCommand, setPosition)
     serZero = rospy.Service('setMotorZero', MotorPositionCommand, setZero)
     try:
