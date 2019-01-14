@@ -7,7 +7,15 @@ project(scout3d_scanner)
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS
+  cv_bridge
+  image_transport
+  tf
+  tf_conversions
+  pcl_conversions
+  rosbag
+  pcl_ros
+)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -101,7 +109,7 @@ find_package(catkin REQUIRED)
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES scout3d_scanner
-#  CATKIN_DEPENDS other_catkin_pkg
+  CATKIN_DEPENDS cv_bridge image_transport tf tf_conversions pcl_conversions rosbag pcl_ros
 #  DEPENDS system_lib
 )
 
@@ -113,8 +121,12 @@ catkin_package(
 ## Your package locations should be listed before other locations
 include_directories(
 # include
-# ${catkin_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
 )
+
+## bag2images
+add_executable(bag2images src/bag2images.cc)
+target_link_libraries(bag2images ${catkin_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

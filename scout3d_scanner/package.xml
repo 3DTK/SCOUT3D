@@ -49,6 +49,13 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <depend>cv_bridge</depend>
+  <depend>image_transport</depend>
+  <depend>tf</depend>
+  <depend>tf_conversions</depend>
+  <depend>pcl_conversions</depend>
+  <depend>rosbag</depend>
+  <depend>pcl_ros</depend>
 
 
   <!-- The export tag contains other, unspecified, tags -->
