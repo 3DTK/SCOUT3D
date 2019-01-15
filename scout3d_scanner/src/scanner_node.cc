@@ -1,4 +1,4 @@
-#include "reconstruct/processing/ImageProcessor.h"
+#include "scout3d/processing/ImageProcessor.h"
 #include <scout3d_motor/MotorPosition.h>
 #include <ros/ros.h>
 #include <image_transport/image_transport.h>
@@ -34,7 +34,13 @@ void motorPositionCallback(const scout3d_motor::MotorPosition::ConstPtr& msg)
 void imageCallback(const sensor_msgs::Image::ConstPtr& msg)
 {
     if (processor->process(msg)) {
-        publisher.publish(processor->cloud());
+        sensor_msgs::PointCloud cloud;
+        cloud.header.frame_id = "/camera";
+        cloud.header.stamp = msg->header.stamp;
+
+        processor->computeCloud(cloud);
+
+        publisher.publish(cloud);
     }
 }
 

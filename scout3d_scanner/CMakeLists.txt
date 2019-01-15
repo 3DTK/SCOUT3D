@@ -135,17 +135,13 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-## bag2images
-add_executable(bag2images src/bag2images.cc)
-target_link_libraries(bag2images ${catkin_LIBRARIES})
-
 if(${3DTK_FOUND})
   include_directories(${3DTK_INCLUDE_DIRS})
 
   add_executable(scanner_node src/scanner_node.cc)
   target_link_libraries(scanner_node
     ${catkin_LIBRARIES}
-    reconstruct_processing
+    scout3d_processing
   )
 endif()
 
