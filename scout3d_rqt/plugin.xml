@@ -1,0 +1,16 @@
+<library path="lib/librqt_scout3d">
+  <class name="Scanner Control" type="rqt_scout3d::ScannerControl" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      A GUI plugin to control the SCOUT3D scanner.
+    </description>
+    <qtgui>
+      <group>
+        <label>SCOUT3D</label>
+        <icon type="theme">folder</icon>
+      </group>
+      <label>Scanner Control</label>
+      <icon type="theme">media-playback-start</icon>
+      <statustip>SCOUT3D scanner control.</statustip>
+    </qtgui>
+  </class>
+</library>
