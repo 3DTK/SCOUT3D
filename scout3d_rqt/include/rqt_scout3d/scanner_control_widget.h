@@ -17,7 +17,7 @@ public:
     explicit ScannerControlWidget(QWidget *parent = nullptr);
     ~ScannerControlWidget();
 
-public slots:
+private slots:
     void handle_checkBoxLaser();
     void handle_sliderLaser0();
     void handle_sliderLaser1();
@@ -25,10 +25,14 @@ public slots:
     void handle_groupBoxImageBright();
     void handle_groupBoxImageDark();
     void handle_buttonMotorZero();
+    void updateCameraParameters();
 
 private:
     void motorPositionCallback(const sensor_msgs::JointState::ConstPtr& msg);
     void sendLaserCommand();
+    void setFramerate(double frameRate);
+    double getFramerate();
+    void setCameraParameters(double frameRate, double shutter, double gain);
 
 private:
     Ui::ScannerControlWidget* ui;

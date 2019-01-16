@@ -3,6 +3,9 @@
 #include <scout3d_laser/LaserPowerCommand.h>
 #include <scout3d_motor/MotorPositionCommand.h>
 #include <QDebug>
+#include <dynamic_reconfigure/DoubleParameter.h>
+#include <dynamic_reconfigure/Reconfigure.h>
+#include <dynamic_reconfigure/Config.h>
 
 ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     QWidget(parent),
@@ -30,6 +33,14 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
 
     ui->checkBoxLaserOn->setCheckState(Qt::CheckState::Unchecked);
     sendLaserCommand();
+
+    ui->SpinBoxImageFramerate->setValue(getFramerate());
+    updateCameraParameters();
+    connect(ui->SpinBoxImageFramerate, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
+    connect(ui->SpinBoxImageBrightShutter, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
+    connect(ui->SpinBoxImageBrightGain, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
+    connect(ui->SpinBoxImageDarkShutter, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
+    connect(ui->SpinBoxImageDarkGain, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
 }
 
 ScannerControlWidget::~ScannerControlWidget()
@@ -92,11 +103,15 @@ void ScannerControlWidget::handle_sliderMotorSetpoint()
 void ScannerControlWidget::handle_groupBoxImageBright()
 {
     ui->groupBoxImageDark->setChecked(!ui->groupBoxImageBright->isChecked());
+
+    updateCameraParameters();
 }
 
 void ScannerControlWidget::handle_groupBoxImageDark()
 {
     ui->groupBoxImageBright->setChecked(!ui->groupBoxImageDark->isChecked());
+
+    updateCameraParameters();
 }
 
 void ScannerControlWidget::handle_buttonMotorZero()
@@ -137,4 +152,61 @@ void ScannerControlWidget::sendLaserCommand()
     }
 
     ros::service::call("/laser/setLaserPower", command);
+}
+
+double ScannerControlWidget::getFramerate()
+{
+    dynamic_reconfigure::ReconfigureRequest srv_req;
+    dynamic_reconfigure::ReconfigureResponse srv_resp;
+
+    ros::service::call("/camera/camera_nodelet/set_parameters", srv_req, srv_resp);
+
+    double frameRate = 0;
+    for (const dynamic_reconfigure::DoubleParameter& param : srv_resp.config.doubles) {
+        if (param.name.compare("frame_rate") == 0) {
+            frameRate = param.value;
+        }
+    }
+
+    return frameRate;
+}
+
+void ScannerControlWidget::setCameraParameters(double frameRate, double shutter, double gain)
+{
+    dynamic_reconfigure::ReconfigureRequest srv_req;
+    dynamic_reconfigure::ReconfigureResponse srv_resp;
+    dynamic_reconfigure::DoubleParameter double_param;
+    dynamic_reconfigure::Config conf;
+
+    double_param.name = "frame_rate";
+    double_param.value = frameRate;
+    conf.doubles.push_back(double_param);
+
+    double_param.name = "shutter_speed";
+    double_param.value = shutter;
+    conf.doubles.push_back(double_param);
+
+    double_param.name = "gain";
+    double_param.value = gain;
+    conf.doubles.push_back(double_param);
+
+    srv_req.config = conf;
+
+    ros::service::call("/camera/camera_nodelet/set_parameters", srv_req, srv_resp);
+}
+
+void ScannerControlWidget::updateCameraParameters()
+{
+    double shutter = 0;
+    double gain = 0;
+
+    if (ui->groupBoxImageBright->isChecked()) {
+        shutter = ui->SpinBoxImageBrightShutter->value();
+        gain = ui->SpinBoxImageBrightGain->value();
+    } else {
+        shutter = ui->SpinBoxImageDarkShutter->value();
+        gain = ui->SpinBoxImageDarkGain->value();
+    }
+
+    setCameraParameters(ui->SpinBoxImageFramerate->value(), shutter, gain);
 }
