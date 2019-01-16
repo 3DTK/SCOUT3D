@@ -1,5 +1,7 @@
 #include "rqt_scout3d/scanner_control_widget.h"
 #include "ui_scanner_control_widget.h"
+#include <scout3d_laser/LaserPowerCommand.h>
+#include <scout3d_motor/MotorPositionCommand.h>
 #include <QDebug>
 
 ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
@@ -17,35 +19,31 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
 
     connect(ui->sliderLaser0, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLaser0()));
     connect(ui->sliderLaser1, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLaser1()));
-    connect(ui->sliderMotorSetpoint, SIGNAL(valueChanged(double)), this, SLOT(handle_sliderMotorSetpoint()));
 
-    laserState_.on = ui->checkBoxLaserOn->checkState() == Qt::CheckState::Checked;
-    laserState_.continous = ui->checkBoxLaserContinous->checkState() == Qt::CheckState::Checked;
-    laserState_.power[0] = ui->sliderLaser0->value() / 100.0f;
-    laserState_.power[1] = ui->sliderLaser1->value() / 100.0f;
+    connect(ui->buttonMotorZero, SIGNAL(clicked()), this, SLOT(handle_buttonMotorZero()));
 
-    ui->labelLaser0->setText(QString::number(laserState_.power[0], 'f', 2));
-    ui->labelLaser1->setText(QString::number(laserState_.power[1], 'f', 2));
+    ui->labelLaser0->setText(QString::number(ui->sliderLaser0->value() / 100.0f, 'f', 2));
+    ui->labelLaser1->setText(QString::number(ui->sliderLaser1->value() / 100.0f, 'f', 2));
 
-    double value = 0;
-    ui->labelMotorValue->setText(QString::number(value, 'f', 2));
+    motorPositionReceived_ = false;
+    motorMessageSubscriber_ = nh_.subscribe("/motor/motorPosition", 1, &ScannerControlWidget::motorPositionCallback, this);
 
-    double setpoint = ui->sliderMotorSetpoint->value();
-    ui->labelMotorSetpoint->setText(QString::number(setpoint, 'f', 2));
+    ui->checkBoxLaserOn->setCheckState(Qt::CheckState::Unchecked);
+    sendLaserCommand();
 }
 
 ScannerControlWidget::~ScannerControlWidget()
 {
-    laserState_.on = false;
-    emit laserStateChanged(laserState_);
+    motorMessageSubscriber_.shutdown();
+
+    ui->checkBoxLaserOn->setCheckState(Qt::CheckState::Unchecked);
+    sendLaserCommand();
 
     delete ui;
 }
 
 void ScannerControlWidget::handle_checkBoxLaser()
 {
-    laserState_.on = ui->checkBoxLaserOn->checkState() == Qt::CheckState::Checked;
-    laserState_.continous = ui->checkBoxLaserContinous->checkState() == Qt::CheckState::Checked;
     if (ui->checkBoxLaserEqualPower->checkState() == Qt::CheckState::Checked) {
         if (ui->sliderLaser0->value() < ui->sliderLaser1->value()) {
             ui->sliderLaser1->setValue(ui->sliderLaser0->value());
@@ -54,42 +52,41 @@ void ScannerControlWidget::handle_checkBoxLaser()
         }
     }
 
-    laserState_.power[0] = ui->sliderLaser0->value() / 100.0f;
-    laserState_.power[1] = ui->sliderLaser1->value() / 100.0f;
-
-    emit laserStateChanged(laserState_);
+    sendLaserCommand();
 }
 
 void ScannerControlWidget::handle_sliderLaser0()
 {
-    laserState_.power[0] = ui->sliderLaser0->value() / 100.0f;
-
     if (ui->checkBoxLaserEqualPower->checkState() == Qt::CheckState::Checked) {
-        ui->sliderLaser1->setValue(laserState_.power[0] * 100.0f);
+        ui->sliderLaser1->setValue(ui->sliderLaser0->value());
     }
 
-    ui->labelLaser0->setText(QString::number(laserState_.power[0], 'f', 2));
+    ui->labelLaser0->setText(QString::number(ui->sliderLaser0->value() / 100.0f, 'f', 2));
+    ui->labelLaser1->setText(QString::number(ui->sliderLaser1->value() / 100.0f, 'f', 2));
 
-    emit laserStateChanged(laserState_);
+    sendLaserCommand();
 }
 
 void ScannerControlWidget::handle_sliderLaser1()
 {
-    laserState_.power[1] = ui->sliderLaser1->value() / 100.0f;
-
     if (ui->checkBoxLaserEqualPower->checkState() == Qt::CheckState::Checked) {
-        ui->sliderLaser0->setValue(laserState_.power[1] * 100.0f);
+        ui->sliderLaser0->setValue(ui->sliderLaser1->value());
     }
 
-    ui->labelLaser1->setText(QString::number(laserState_.power[1], 'f', 2));
+    ui->labelLaser0->setText(QString::number(ui->sliderLaser0->value() / 100.0f, 'f', 2));
+    ui->labelLaser1->setText(QString::number(ui->sliderLaser1->value() / 100.0f, 'f', 2));
 
-    emit laserStateChanged(laserState_);
+    sendLaserCommand();
 }
 
 void ScannerControlWidget::handle_sliderMotorSetpoint()
 {
-    double setpoint = ui->sliderMotorSetpoint->value();
-    ui->labelMotorSetpoint->setText(QString::number(setpoint, 'f', 2));
+    double value = ui->sliderMotorSetpoint->value();
+    ui->labelMotorSetpoint->setText(QString::number(value, 'f', 2));
+
+    scout3d_motor::MotorPositionCommand command;
+    command.request.position = value;
+    ros::service::call("/motor/setMotorPosition", command);
 }
 
 void ScannerControlWidget::handle_groupBoxImageBright()
@@ -100,4 +97,44 @@ void ScannerControlWidget::handle_groupBoxImageBright()
 void ScannerControlWidget::handle_groupBoxImageDark()
 {
     ui->groupBoxImageBright->setChecked(!ui->groupBoxImageDark->isChecked());
+}
+
+void ScannerControlWidget::handle_buttonMotorZero()
+{
+    double value = 0;
+    ui->sliderMotorSetpoint->setValue(value);
+    ui->labelMotorSetpoint->setText(QString::number(value, 'f', 2));
+
+    scout3d_motor::MotorPositionCommand command;
+    command.request.position = value;
+    ros::service::call("/motor/setMotorZero", command);
+}
+
+void ScannerControlWidget::motorPositionCallback(const sensor_msgs::JointState::ConstPtr& msg)
+{
+    double value = msg->position.at(0) * 180.0 / M_PI;
+
+    if (!motorPositionReceived_) {
+        motorPositionReceived_ = true;
+        ui->sliderMotorSetpoint->setValue(value);
+        ui->labelMotorSetpoint->setText(QString::number(value, 'f', 2));
+        connect(ui->sliderMotorSetpoint, SIGNAL(valueChanged(double)), this, SLOT(handle_sliderMotorSetpoint()));
+    }
+
+    ui->labelMotorValue->setText(QString::number(value, 'f', 2));
+}
+
+void ScannerControlWidget::sendLaserCommand()
+{
+    scout3d_laser::LaserPowerCommand command;
+    command.request.laser_mode = ui->checkBoxLaserContinous->checkState() == Qt::CheckState::Checked;;
+    if (ui->checkBoxLaserOn->checkState() == Qt::CheckState::Checked) {
+        command.request.green_power = ui->sliderLaser0->value() / 100.0f;
+        command.request.blue_power = ui->sliderLaser1->value() / 100.0f;
+    } else {
+        command.request.green_power = 0;
+        command.request.blue_power = 0;
+    }
+
+    ros::service::call("/laser/setLaserPower", command);
 }

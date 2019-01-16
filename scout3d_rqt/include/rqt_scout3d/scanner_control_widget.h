@@ -2,6 +2,8 @@
 #define SCANNER_CONTROL_WIDGET_H
 
 #include <QWidget>
+#include <ros/ros.h>
+#include <sensor_msgs/JointState.h>
 
 namespace Ui {
 class ScannerControlWidget;
@@ -12,18 +14,8 @@ class ScannerControlWidget : public QWidget
     Q_OBJECT
 
 public:
-    struct LaserState {
-        bool on;
-        bool continous;
-        float power[2];
-    };
-
-public:
     explicit ScannerControlWidget(QWidget *parent = nullptr);
     ~ScannerControlWidget();
-
-signals:
-    void laserStateChanged(ScannerControlWidget::LaserState state);
 
 public slots:
     void handle_checkBoxLaser();
@@ -32,10 +24,17 @@ public slots:
     void handle_sliderMotorSetpoint();
     void handle_groupBoxImageBright();
     void handle_groupBoxImageDark();
+    void handle_buttonMotorZero();
+
+private:
+    void motorPositionCallback(const sensor_msgs::JointState::ConstPtr& msg);
+    void sendLaserCommand();
 
 private:
     Ui::ScannerControlWidget* ui;
-    LaserState laserState_;
+    ros::NodeHandle nh_;
+    ros::Subscriber motorMessageSubscriber_;
+    bool motorPositionReceived_;
 };
 
 #endif // SCANNER_CONTROL_WIDGET_H

@@ -157,7 +157,7 @@ qt5_wrap_ui(rqt_scout3d_UIS_H ${rqt_scout3d_UIS})
 add_library(rqt_scout3d ${rqt_scout3d_SRCS} ${rqt_scout3d_MOCS} ${rqt_scout3d_UIS_H})
 target_link_libraries(rqt_scout3d
     ${catkin_LIBRARIES}
-    rqt_scout3d Qt5::Widgets
+    Qt5::Widgets
     ${QWT_LIBRARIES}
 )
 
