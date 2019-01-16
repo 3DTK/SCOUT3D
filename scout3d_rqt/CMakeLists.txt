@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   scout3d_motor
   rqt_gui
   rqt_gui_cpp
+  cv_bridge
 )
 
 ## System dependencies are found with CMake's conventions
@@ -120,7 +121,7 @@ find_library(QWT_LIBRARIES
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES scout3d_rqt
-  CATKIN_DEPENDS scout3d_laser scout3d_motor rqt_gui rqt_gui_cpp
+  CATKIN_DEPENDS scout3d_laser scout3d_motor rqt_gui rqt_gui_cpp cv_bridge
 #  DEPENDS system_lib
 )
 

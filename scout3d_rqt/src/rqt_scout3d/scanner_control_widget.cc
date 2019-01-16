@@ -6,10 +6,18 @@
 #include <dynamic_reconfigure/DoubleParameter.h>
 #include <dynamic_reconfigure/Reconfigure.h>
 #include <dynamic_reconfigure/Config.h>
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/opencv.hpp>
+#include <boost/filesystem.hpp>
+#include <iomanip>
 
 ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ScannerControlWidget)
+    ui(new Ui::ScannerControlWidget),
+    motorPositionReceived_(false),
+    imageColorIndex_(0),
+    imageCalibrationIndex_(0),
+    calibrationState_(CalibrationState::bright)
 {
     ui->setupUi(this);
 
@@ -28,7 +36,6 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     ui->labelLaser0->setText(QString::number(ui->sliderLaser0->value() / 100.0f, 'f', 2));
     ui->labelLaser1->setText(QString::number(ui->sliderLaser1->value() / 100.0f, 'f', 2));
 
-    motorPositionReceived_ = false;
     ui->sliderMotorSetpoint->setDisabled(true);
     motorMessageSubscriber_ = nh_.subscribe("/motor/motorPosition", 1, &ScannerControlWidget::motorPositionCallback, this);
 
@@ -42,6 +49,8 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     connect(ui->SpinBoxImageBrightGain, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
     connect(ui->SpinBoxImageDarkShutter, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
     connect(ui->SpinBoxImageDarkGain, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
+    connect(ui->buttonImageCapture, SIGNAL(clicked()), this, SLOT(handle_buttonImageCapture()));
+    connect(ui->buttonImageCaptureCalibration, SIGNAL(clicked()), this, SLOT(handle_buttonImageCaptureCalibration()));
 }
 
 ScannerControlWidget::~ScannerControlWidget()
@@ -126,6 +135,115 @@ void ScannerControlWidget::handle_buttonMotorZero()
     ros::service::call("/motor/setMotorZero", command);
 }
 
+void ScannerControlWidget::handle_buttonImageCapture()
+{
+    ui->buttonImageCapture->setDisabled(true);
+    ui->buttonImageCaptureCalibration->setDisabled(true);
+
+    imageSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageColorCallback, this);
+}
+
+void ScannerControlWidget::handle_buttonImageCaptureCalibration()
+{
+    switch (calibrationState_) {
+
+    case CalibrationState::bright:
+    {
+        ui->buttonImageCapture->setDisabled(true);
+        ui->buttonImageCaptureCalibration->setDisabled(true);
+
+        scout3d_laser::LaserPowerCommand command;
+        command.request.laser_mode = 1;
+        command.request.green_power = 0;
+        command.request.blue_power = 0;
+        ros::service::call("/laser/setLaserPower", command);
+
+        ui->groupBoxImageBright->setChecked(true);
+        ui->groupBoxImageDark->setChecked(false);
+        updateCameraParameters();
+
+        calibrationState_ = CalibrationState::bright_capture;
+        calibrationTimer_.singleShot(0, this, SLOT(handle_buttonImageCaptureCalibration()));
+        break;
+    }
+
+    case CalibrationState::bright_capture:
+    {
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        break;
+    }
+
+    case CalibrationState::dark:
+    {
+        ui->groupBoxImageBright->setChecked(false);
+        ui->groupBoxImageDark->setChecked(true);
+        updateCameraParameters();
+
+        calibrationState_ = CalibrationState::dark_capture;
+        calibrationTimer_.singleShot(0, this, SLOT(handle_buttonImageCaptureCalibration()));
+        break;
+    }
+
+    case CalibrationState::dark_capture:
+    {
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        break;
+    }
+
+    case CalibrationState::laser0:
+    {
+        scout3d_laser::LaserPowerCommand command;
+        command.request.laser_mode = 1;
+        command.request.green_power = ui->sliderLaser0->value() / 100.0f;
+        command.request.blue_power = 0;
+        ros::service::call("/laser/setLaserPower", command);
+
+        calibrationState_ = CalibrationState::laser0_capture;
+        calibrationTimer_.singleShot(0, this, SLOT(handle_buttonImageCaptureCalibration()));
+        break;
+    }
+
+    case CalibrationState::laser0_capture:
+    {
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        break;
+    }
+
+    case CalibrationState::laser1:
+    {
+        scout3d_laser::LaserPowerCommand command;
+        command.request.laser_mode = 1;
+        command.request.green_power = 0;
+        command.request.blue_power = ui->sliderLaser1->value() / 100.0f;
+        ros::service::call("/laser/setLaserPower", command);
+
+        calibrationState_ = CalibrationState::laser1_capture;
+        calibrationTimer_.singleShot(0, this, SLOT(handle_buttonImageCaptureCalibration()));
+        break;
+    }
+
+    case CalibrationState::laser1_capture:
+    {
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        break;
+    }
+
+    case CalibrationState::done:
+    {
+        ui->groupBoxImageBright->setChecked(true);
+        ui->groupBoxImageDark->setChecked(false);
+        updateCameraParameters();
+
+        sendLaserCommand();
+
+        ui->buttonImageCapture->setDisabled(false);
+        ui->buttonImageCaptureCalibration->setDisabled(false);
+        calibrationState_ = CalibrationState::bright;
+        break;
+    }
+    }
+}
+
 void ScannerControlWidget::motorPositionCallback(const sensor_msgs::JointState::ConstPtr& msg)
 {
     double value = msg->position.at(0) * 180.0 / M_PI;
@@ -140,6 +258,69 @@ void ScannerControlWidget::motorPositionCallback(const sensor_msgs::JointState::
     }
 
     ui->labelMotorValue->setText(QString::number(value, 'f', 2));
+}
+
+void ScannerControlWidget::imageColorCallback(const sensor_msgs::Image::ConstPtr& msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    } catch (cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    boost::filesystem::create_directories(boost::filesystem::path("/tmp/scout3d/image_color"));
+
+    std::stringstream ss;
+    ss << "/tmp/scout3d/image_color/image" << std::setfill('0') << std::setw(3) << imageColorIndex_++ << ".png";
+
+    cv::imwrite(ss.str(), cv_ptr->image);
+
+    imageSubscriber_.shutdown();
+    ui->buttonImageCapture->setDisabled(false);
+    ui->buttonImageCaptureCalibration->setDisabled(false);
+}
+
+void ScannerControlWidget::imageCalibrationCallback(const sensor_msgs::Image::ConstPtr& msg)
+{
+    cv_bridge::CvImagePtr cv_ptr;
+    try {
+        cv_ptr = cv_bridge::toCvCopy(msg, sensor_msgs::image_encodings::BGR8);
+    } catch (cv_bridge::Exception& e) {
+        ROS_ERROR("cv_bridge exception: %s", e.what());
+        return;
+    }
+
+    boost::filesystem::create_directories(boost::filesystem::path("/tmp/scout3d/calibration"));
+
+    std::stringstream ss;
+    if (calibrationState_ == CalibrationState::bright_capture) {
+        ss << "/tmp/scout3d/calibration/image" << std::setfill('0') << std::setw(3) << imageCalibrationIndex_ << "_bright.png";
+    } else if (calibrationState_ == CalibrationState::dark_capture) {
+        ss << "/tmp/scout3d/calibration/image" << std::setfill('0') << std::setw(3) << imageCalibrationIndex_ << "_dark.png";
+    } else if (calibrationState_ == CalibrationState::laser0_capture) {
+        ss << "/tmp/scout3d/calibration/image" << std::setfill('0') << std::setw(3) << imageCalibrationIndex_ << "_laser0.png";
+    } else if (calibrationState_ == CalibrationState::laser1_capture) {
+        ss << "/tmp/scout3d/calibration/image" << std::setfill('0') << std::setw(3) << imageCalibrationIndex_ << "_laser1.png";
+    }
+
+    cv::imwrite(ss.str(), cv_ptr->image);
+
+    imageCalibrationSubscriber_.shutdown();
+
+    if (calibrationState_ == CalibrationState::bright_capture) {
+        calibrationState_ = CalibrationState::dark;
+    } else if (calibrationState_ == CalibrationState::dark_capture) {
+        calibrationState_ = CalibrationState::laser0;
+    } else if (calibrationState_ == CalibrationState::laser0_capture) {
+        calibrationState_ = CalibrationState::laser1;
+    } else if (calibrationState_ == CalibrationState::laser1_capture) {
+        imageCalibrationIndex_++;
+        calibrationState_ = CalibrationState::done;
+    }
+
+    calibrationTimer_.singleShot(0, this, SLOT(handle_buttonImageCaptureCalibration()));
 }
 
 void ScannerControlWidget::sendLaserCommand()
