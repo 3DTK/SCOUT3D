@@ -12,13 +12,13 @@ from scout3d_motor.srv import MotorPositionCommand
 def setZero(arg):
     global setpoint
     setpoint = float('nan')
-    position = int(5000.0 * arg.position / 90.0)
+    position = int(5000.0 * arg.position / (math.pi / 2.0))
     subprocess.check_output(["/home/laser/setMotorZero", str(position)])
     return []
 
 def setPosition(arg):
     global setpoint
-    setpoint = int(5000.0 * arg.position / 90.0)
+    setpoint = int(5000.0 * arg.position / (math.pi / 2.0))
     print('new setpoint: ' + str(arg.position))
     return []
 

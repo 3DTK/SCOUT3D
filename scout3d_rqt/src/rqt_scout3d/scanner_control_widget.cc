@@ -29,6 +29,7 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     ui->labelLaser1->setText(QString::number(ui->sliderLaser1->value() / 100.0f, 'f', 2));
 
     motorPositionReceived_ = false;
+    ui->sliderMotorSetpoint->setDisabled(true);
     motorMessageSubscriber_ = nh_.subscribe("/motor/motorPosition", 1, &ScannerControlWidget::motorPositionCallback, this);
 
     ui->checkBoxLaserOn->setCheckState(Qt::CheckState::Unchecked);
@@ -96,7 +97,7 @@ void ScannerControlWidget::handle_sliderMotorSetpoint()
     ui->labelMotorSetpoint->setText(QString::number(value, 'f', 2));
 
     scout3d_motor::MotorPositionCommand command;
-    command.request.position = value;
+    command.request.position = value * M_PI / 180.0;
     ros::service::call("/motor/setMotorPosition", command);
 }
 
@@ -121,7 +122,7 @@ void ScannerControlWidget::handle_buttonMotorZero()
     ui->labelMotorSetpoint->setText(QString::number(value, 'f', 2));
 
     scout3d_motor::MotorPositionCommand command;
-    command.request.position = value;
+    command.request.position = value * M_PI / 180.0;
     ros::service::call("/motor/setMotorZero", command);
 }
 
@@ -130,6 +131,8 @@ void ScannerControlWidget::motorPositionCallback(const sensor_msgs::JointState::
     double value = msg->position.at(0) * 180.0 / M_PI;
 
     if (!motorPositionReceived_) {
+        ui->sliderMotorSetpoint->setDisabled(false);
+
         motorPositionReceived_ = true;
         ui->sliderMotorSetpoint->setValue(value);
         ui->labelMotorSetpoint->setText(QString::number(value, 'f', 2));
