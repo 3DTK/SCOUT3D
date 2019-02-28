@@ -1,0 +1,2 @@
+#! /bin/bash
+tmux new-session -d -s scout3d 'export ROS_MASTER_URI=http://scout3d-camera0.local:11311;source /opt/ros/lunar/setup.bash;source /home/scout3d/ROS/devel/setup.bash;roslaunch --wait scout3d_laser laser.launch'
