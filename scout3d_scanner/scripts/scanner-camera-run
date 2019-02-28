@@ -1,2 +1,0 @@
-#! /bin/bash
-tmux new-session -d -s scanner 'source /opt/ros/lunar/setup.bash;source /home/laser/ROS/devel/setup.bash;roslaunch scout3d_scanner camera.launch'

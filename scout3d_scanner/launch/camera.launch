@@ -5,7 +5,7 @@
     <node pkg="nodelet" type="nodelet" name="camera_nodelet" args="load pointgrey_camera_driver/PointGreyCameraNodelet camera_nodelet_manager" >
       <param name="frame_id" value="camera" />
       <param name="serial" value="0" />
-      <param name="frame_rate" value="15" />
+      <param name="frame_rate" value="41" />
       <param name="enable_strobe1" value="true" />
       <param name="strobe1_duration" value="0.0" />
       <param name="auto_white_balance" value="true" />
