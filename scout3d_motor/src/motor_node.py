@@ -13,7 +13,7 @@ def setZero(arg):
     global setpoint
     setpoint = float('nan')
     position = int(5000.0 * arg.position / (math.pi / 2.0))
-    subprocess.check_output(["/home/laser/setMotorZero", str(position)])
+    subprocess.check_output(["/home/scout3d/setMotorZero", str(position)])
     return []
 
 def setPosition(arg):
@@ -25,7 +25,7 @@ def setPosition(arg):
 def updatePosition():
     global setpoint
     while not rospy.is_shutdown():
-        position = int(subprocess.check_output(["/home/laser/getMotorPosition", ""]))
+        position = int(subprocess.check_output(["/home/scout3d/getMotorPosition", ""]))
         positionDeg = 90.0 * float(position) / 5000.0
         positionRad = (math.pi / 2.0) * float(position) / 5000.0
 
@@ -42,10 +42,10 @@ def updatePosition():
         if not math.isnan(setpoint):
             if setpoint != position:
                 # print('driving: ' + str(setpoint))
-                subprocess.check_output(["/home/laser/setMotorPosition", str(setpoint)])
+                subprocess.check_output(["/home/scout3d/setMotorPosition", str(setpoint)])
             else:
                 # print('deenergize')
-                subprocess.check_output(["/home/laser/off", ""])
+                subprocess.check_output(["/home/scout3d/off", ""])
         time.sleep(.01)
 
 if __name__ == '__main__':
