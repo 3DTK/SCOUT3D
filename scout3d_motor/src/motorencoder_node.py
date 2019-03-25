@@ -4,6 +4,7 @@ import rospy
 import serial
 import threading
 from sensor_msgs.msg import JointState
+from scout3d_motor.srv import LightCommand
 
 def publishEncoderValues():
     direction = 0 # motor direction -1 and +1
@@ -36,7 +37,6 @@ def publishEncoderValues():
                 msg.velocity = [ 0 ]
                 msg.effort = [ 0 ]
                 pub.publish(msg)
-                print(str(value))
                 
                 lasttickvalue = value
                 if direction > 0:
@@ -54,8 +54,19 @@ def publishEncoderValues():
                         diff = lasttickvalue - value
                     totalticks -= diff
 
+def setLight(req):
+    value = req.brightness
+    if (value < 0):
+        value = 0
+    elif (value > 1.0):
+        value = 1.0
+
+    ser.write('CMD ' + str(int(value * 255.0)) + ' 0' + '\n')
+    return []
+
 if __name__ == '__main__':
     rospy.init_node('motorencoder_node', anonymous=True)
+    rospy.Service('setLight', LightCommand, setLight)
     pub = rospy.Publisher('encoder_raw', JointState, queue_size=10)
     try:
         ser = serial.Serial('/dev/ttyS0', 115200)
