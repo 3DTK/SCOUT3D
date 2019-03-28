@@ -1,6 +1,6 @@
 #! /bin/bash
 
-rosbag record \
+rosbag record --lz4 -b 1000 \
 /camera/image_raw \
 /camera/imu/data /camera/imu/data_raw /camera/imu/is_calibrated /camera/imu/mag /camera/imu/magnetic_field \
 /laser/imu/data /laser/imu/data_raw /laser/imu/is_calibrated /laser/imu/mag /laser/imu/magnetic_field \

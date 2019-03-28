@@ -23,6 +23,7 @@ private slots:
     void handle_checkBoxLaser();
     void handle_sliderLaser0();
     void handle_sliderLaser1();
+    void handle_sliderLightBrightness();
     void handle_sliderMotorSetpoint();
     void handle_groupBoxImageBright();
     void handle_groupBoxImageDark();

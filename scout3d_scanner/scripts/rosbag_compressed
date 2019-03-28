@@ -1,9 +1,0 @@
-#! /bin/bash
-
-rosbag record \
-/camera/image_color/compressed \
-/camera/imu/data /camera/imu/data_raw /camera/imu/is_calibrated /camera/imu/mag /camera/imu/magnetic_field \
-/laser/imu/data /laser/imu/data_raw /laser/imu/is_calibrated /laser/imu/mag /laser/imu/magnetic_field \
-/laser/temperature \
-/motor/encoder_raw \
-/motor/motorPosition

@@ -2,6 +2,7 @@
 #include "ui_scanner_control_widget.h"
 #include <scout3d_laser/LaserPowerCommand.h>
 #include <scout3d_motor/MotorPositionCommand.h>
+#include <scout3d_motor/LightCommand.h>
 #include <QDebug>
 #include <dynamic_reconfigure/DoubleParameter.h>
 #include <dynamic_reconfigure/Reconfigure.h>
@@ -30,6 +31,8 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
 
     connect(ui->sliderLaser0, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLaser0()));
     connect(ui->sliderLaser1, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLaser1()));
+
+    connect(ui->sliderLightBrightness, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLightBrightness()));
 
     connect(ui->buttonMotorZero, SIGNAL(clicked()), this, SLOT(handle_buttonMotorZero()));
 
@@ -100,6 +103,13 @@ void ScannerControlWidget::handle_sliderLaser1()
     sendLaserCommand();
 }
 
+void ScannerControlWidget::handle_sliderLightBrightness()
+{
+    scout3d_motor::LightCommand command;
+    command.request.brightness = ui->sliderLightBrightness->value() / 100.0f;
+    ros::service::call("/motor/setLight", command);
+}
+
 void ScannerControlWidget::handle_sliderMotorSetpoint()
 {
     double value = ui->sliderMotorSetpoint->value();
@@ -140,7 +150,7 @@ void ScannerControlWidget::handle_buttonImageCapture()
     ui->buttonImageCapture->setDisabled(true);
     ui->buttonImageCaptureCalibration->setDisabled(true);
 
-    imageSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageColorCallback, this);
+    imageSubscriber_ = nh_.subscribe("/camera/image_raw", 1, &ScannerControlWidget::imageColorCallback, this);
 }
 
 void ScannerControlWidget::handle_buttonImageCaptureCalibration()
@@ -169,7 +179,8 @@ void ScannerControlWidget::handle_buttonImageCaptureCalibration()
 
     case CalibrationState::bright_capture:
     {
-        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        sleep(1);
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_raw", 1, &ScannerControlWidget::imageCalibrationCallback, this);
         break;
     }
 
@@ -186,7 +197,8 @@ void ScannerControlWidget::handle_buttonImageCaptureCalibration()
 
     case CalibrationState::dark_capture:
     {
-        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        sleep(1);
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_raw", 1, &ScannerControlWidget::imageCalibrationCallback, this);
         break;
     }
 
@@ -205,7 +217,8 @@ void ScannerControlWidget::handle_buttonImageCaptureCalibration()
 
     case CalibrationState::laser0_capture:
     {
-        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        sleep(1);
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_raw", 1, &ScannerControlWidget::imageCalibrationCallback, this);
         break;
     }
 
@@ -224,7 +237,8 @@ void ScannerControlWidget::handle_buttonImageCaptureCalibration()
 
     case CalibrationState::laser1_capture:
     {
-        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_color", 1, &ScannerControlWidget::imageCalibrationCallback, this);
+        sleep(1);
+        imageCalibrationSubscriber_ = nh_.subscribe("/camera/image_raw", 1, &ScannerControlWidget::imageCalibrationCallback, this);
         break;
     }
 
@@ -270,10 +284,10 @@ void ScannerControlWidget::imageColorCallback(const sensor_msgs::Image::ConstPtr
         return;
     }
 
-    boost::filesystem::create_directories(boost::filesystem::path("/tmp/scout3d/image_color"));
+    boost::filesystem::create_directories(boost::filesystem::path("/tmp/scout3d/capture"));
 
     std::stringstream ss;
-    ss << "/tmp/scout3d/image_color/image" << std::setfill('0') << std::setw(3) << imageColorIndex_++ << ".png";
+    ss << "/tmp/scout3d/capture/image" << std::setfill('0') << std::setw(3) << imageColorIndex_++ << ".png";
 
     cv::imwrite(ss.str(), cv_ptr->image);
 
@@ -343,11 +357,11 @@ double ScannerControlWidget::getFramerate()
     dynamic_reconfigure::ReconfigureRequest srv_req;
     dynamic_reconfigure::ReconfigureResponse srv_resp;
 
-    ros::service::call("/camera/camera_nodelet/set_parameters", srv_req, srv_resp);
+    ros::service::call("/camera/spinnaker_camera_nodelet/set_parameters", srv_req, srv_resp);
 
     double frameRate = 0;
     for (const dynamic_reconfigure::DoubleParameter& param : srv_resp.config.doubles) {
-        if (param.name.compare("frame_rate") == 0) {
+        if (param.name.compare("acquisition_frame_rate") == 0) {
             frameRate = param.value;
         }
     }
@@ -362,12 +376,12 @@ void ScannerControlWidget::setCameraParameters(double frameRate, double shutter,
     dynamic_reconfigure::DoubleParameter double_param;
     dynamic_reconfigure::Config conf;
 
-    double_param.name = "frame_rate";
+    double_param.name = "acquisition_frame_rate";
     double_param.value = frameRate;
     conf.doubles.push_back(double_param);
 
-    double_param.name = "shutter_speed";
-    double_param.value = shutter;
+    double_param.name = "exposure_time";
+    double_param.value = shutter * 1e6;
     conf.doubles.push_back(double_param);
 
     double_param.name = "gain";
@@ -376,7 +390,7 @@ void ScannerControlWidget::setCameraParameters(double frameRate, double shutter,
 
     srv_req.config = conf;
 
-    ros::service::call("/camera/camera_nodelet/set_parameters", srv_req, srv_resp);
+    ros::service::call("/camera/spinnaker_camera_nodelet/set_parameters", srv_req, srv_resp);
 }
 
 void ScannerControlWidget::updateCameraParameters()
