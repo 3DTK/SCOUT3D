@@ -1,0 +1,5 @@
+#! /bin/bash
+
+export ROS_MASTER_URI=http://scout3d-camera0.local:11311 &&\
+source devel/setup.bash &&\
+rqt --perspective-file src/SCOUT3D/scout3d_scanner/configuration/scout3d.perspective
