@@ -32,7 +32,8 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     connect(ui->sliderLaser0, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLaser0()));
     connect(ui->sliderLaser1, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLaser1()));
 
-    connect(ui->sliderLightBrightness, SIGNAL(valueChanged(int)), this, SLOT(handle_sliderLightBrightness()));
+    connect(ui->sliderLightBrightness, SIGNAL(valueChanged(int)), this, SLOT(handle_lightBrightness()));
+    connect(ui->checkBoxLightOn, SIGNAL(stateChanged(int)), this, SLOT(handle_lightBrightness()));
 
     connect(ui->buttonMotorZero, SIGNAL(clicked()), this, SLOT(handle_buttonMotorZero()));
 
@@ -103,10 +104,15 @@ void ScannerControlWidget::handle_sliderLaser1()
     sendLaserCommand();
 }
 
-void ScannerControlWidget::handle_sliderLightBrightness()
+void ScannerControlWidget::handle_lightBrightness()
 {
+    float value = 0;
+    if (ui->checkBoxLightOn->checkState() == Qt::CheckState::Checked) {
+        value =ui->sliderLightBrightness->value() / 100.0f;
+    }
+
     scout3d_motor::LightCommand command;
-    command.request.brightness = ui->sliderLightBrightness->value() / 100.0f;
+    command.request.brightness = value;
     ros::service::call("/motor/setLight", command);
 }
 
