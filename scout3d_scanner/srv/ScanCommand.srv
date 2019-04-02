@@ -1,0 +1,7 @@
+float32 start_angle
+float32 stop_angle
+float32 laser0_power
+float32 laser1_power
+float32 camera_shutter
+float32 camera_gain
+---

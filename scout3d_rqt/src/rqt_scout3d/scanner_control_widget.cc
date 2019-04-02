@@ -1,5 +1,6 @@
 #include "rqt_scout3d/scanner_control_widget.h"
 #include "ui_scanner_control_widget.h"
+#include<scout3d_scanner/ScanCommand.h>
 #include <scout3d_laser/LaserPowerCommand.h>
 #include <scout3d_motor/MotorPositionCommand.h>
 #include <scout3d_motor/LightCommand.h>
@@ -55,6 +56,8 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     connect(ui->SpinBoxImageDarkGain, SIGNAL(valueChanged(double)), this, SLOT(updateCameraParameters()));
     connect(ui->buttonImageCapture, SIGNAL(clicked()), this, SLOT(handle_buttonImageCapture()));
     connect(ui->buttonImageCaptureCalibration, SIGNAL(clicked()), this, SLOT(handle_buttonImageCaptureCalibration()));
+
+    connect(ui->buttonScan, SIGNAL(clicked()), this, SLOT(handle_buttonScan()));
 }
 
 ScannerControlWidget::~ScannerControlWidget()
@@ -149,6 +152,24 @@ void ScannerControlWidget::handle_buttonMotorZero()
     scout3d_motor::MotorPositionCommand command;
     command.request.position = value * M_PI / 180.0;
     ros::service::call("/motor/setMotorZero", command);
+}
+
+void ScannerControlWidget::handle_buttonScan()
+{
+    ui->groupBoxImageDark->setChecked(true);
+    ui->groupBoxImageBright->setChecked(false);
+    ui->checkBoxLaserOn->setCheckState(Qt::CheckState::Unchecked);
+    ui->checkBoxLaserContinous->setCheckState(Qt::CheckState::Unchecked);
+
+    scout3d_scanner::ScanCommand command;
+    command.request.start_angle = ui->spinBoxScanStartAngle->value() * M_PI / 180.0;
+    command.request.stop_angle = ui->spinBoxScanStopAngle->value() * M_PI / 180.0;
+    command.request.laser0_power = ui->sliderLaser0->value() / 100.0f;
+    command.request.laser1_power = ui->sliderLaser1->value() / 100.0f;
+    command.request.camera_shutter = ui->SpinBoxImageDarkShutter->value();
+    command.request.camera_gain = ui->SpinBoxImageDarkGain->value();
+
+    ros::service::call("/startScan", command);
 }
 
 void ScannerControlWidget::handle_buttonImageCapture()

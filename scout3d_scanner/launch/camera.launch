@@ -40,4 +40,6 @@
 
     <node pkg="scout3d_temperature" type="temperature_node.py" name="temperature_node"/>
   </group>
+
+  <node pkg="scout3d_scanner" type="control_node.py" name="control_node"/>
 </launch>

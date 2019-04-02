@@ -1,9 +1,14 @@
 #! /bin/bash
 
+export ROS_MASTER_URI=http://scout3d-camera0.local:11311
+
 rosbag record --lz4 -b 1000 \
 /camera/image_raw \
 /camera/imu/data /camera/imu/data_raw /camera/imu/is_calibrated /camera/imu/mag /camera/imu/magnetic_field \
+/camera/temperature/cpu \
 /laser/imu/data /laser/imu/data_raw /laser/imu/is_calibrated /laser/imu/mag /laser/imu/magnetic_field \
-/laser/temperature \
+/laser/temperature/cpu \
+/laser/temperature/sensor \
 /motor/encoder_raw \
-/motor/motorPosition
+/motor/motorPosition \
+/motor/temperature/cpu \
