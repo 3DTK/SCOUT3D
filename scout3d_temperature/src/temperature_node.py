@@ -44,15 +44,37 @@ def readTempSensor():
     msg.humidity = humidity
     return (msg)
 
+def readTempCpu():
+    f = open('/sys/class/thermal/thermal_zone0/temp', 'r')
+    temp = float(f.readline()) / 1000.0
+
+    msg = TemperatureHumidity()
+    msg.timestamp = rospy.Time.now()
+    msg.temperature = temp
+    msg.humidity = 0
+    return(msg)
+
 def publishTemp():
-    pub = rospy.Publisher('temperature', TemperatureHumidity, queue_size=10)
+    pubSensor = rospy.Publisher('temperature/sensor', TemperatureHumidity, queue_size=10)
+    pubCpu = rospy.Publisher('temperature/cpu', TemperatureHumidity, queue_size=10)
+
     rospy.init_node('temperature_node', anonymous=True)
+
+    useSensor = rospy.get_param('~use_sensor', False)
+
     rate = rospy.Rate(1) # 1hz
     while not rospy.is_shutdown():
-        msg = readTempSensor()
+        if (useSensor):
+            msg = readTempSensor()
+            #TODO make source configurable
+            msg.source = "sensor"
+            pubSensor.publish(msg)
+
+        msg = readTempCpu()
         #TODO make source configurable
-        msg.source = "laser"
-        pub.publish(msg)
+        msg.source = "cpu"
+        pubCpu.publish(msg)
+
         rate.sleep()
 
 if __name__ == '__main__':

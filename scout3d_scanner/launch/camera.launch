@@ -37,5 +37,7 @@
       <param name="use_mag" value="true" />
       <param name="publish_tf" value="false" />
     </node>
+
+    <node pkg="scout3d_temperature" type="temperature_node.py" name="temperature_node"/>
   </group>
 </launch>

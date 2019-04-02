@@ -2,5 +2,6 @@
   <group ns="motor">
     <node pkg="scout3d_motor" type="motor_node.py" name="motor_node"/>
     <node pkg="scout3d_motor" type="motorencoder_node.py" name="motorencoder_node"/>
+    <node pkg="scout3d_temperature" type="temperature_node.py" name="temperature_node"/>
   </group>
 </launch>
