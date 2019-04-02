@@ -12,6 +12,7 @@
 #include <opencv2/opencv.hpp>
 #include <boost/filesystem.hpp>
 #include <iomanip>
+#include <QProcess>
 
 ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     QWidget(parent),
@@ -58,6 +59,7 @@ ScannerControlWidget::ScannerControlWidget(QWidget *parent) :
     connect(ui->buttonImageCaptureCalibration, SIGNAL(clicked()), this, SLOT(handle_buttonImageCaptureCalibration()));
 
     connect(ui->buttonScan, SIGNAL(clicked()), this, SLOT(handle_buttonScan()));
+    connect(ui->buttonDownload, SIGNAL(clicked()), this, SLOT(handle_buttonDownload()));
 }
 
 ScannerControlWidget::~ScannerControlWidget()
@@ -170,6 +172,12 @@ void ScannerControlWidget::handle_buttonScan()
     command.request.camera_gain = ui->SpinBoxImageDarkGain->value();
 
     ros::service::call("/startScan", command);
+}
+
+void ScannerControlWidget::handle_buttonDownload()
+{
+    QProcess* process = new QProcess(this);
+    process->start("xdg-open", QStringList() << "http://scout3d-camera0.local/bag/");
 }
 
 void ScannerControlWidget::handle_buttonImageCapture()

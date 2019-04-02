@@ -31,6 +31,7 @@ private slots:
     void handle_buttonImageCapture();
     void handle_buttonImageCaptureCalibration();
     void handle_buttonScan();
+    void handle_buttonDownload();
     void updateCameraParameters();
 
 private:
