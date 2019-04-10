@@ -55,12 +55,13 @@ def readTempCpu():
     return(msg)
 
 def publishTemp():
-    pubSensor = rospy.Publisher('temperature/sensor', TemperatureHumidity, queue_size=10)
+    useSensor = rospy.get_param('~use_sensor', False)
+
+    if (useSensor):
+        pubSensor = rospy.Publisher('temperature/sensor', TemperatureHumidity, queue_size=10)
     pubCpu = rospy.Publisher('temperature/cpu', TemperatureHumidity, queue_size=10)
 
     rospy.init_node('temperature_node', anonymous=True)
-
-    useSensor = rospy.get_param('~use_sensor', False)
 
     rate = rospy.Rate(1) # 1hz
     while not rospy.is_shutdown():

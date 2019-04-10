@@ -2,7 +2,7 @@
 
 export ROS_MASTER_URI=http://scout3d-camera0.local:11311
 
-rosbag record --lz4 -b 1000 \
+rosbag record -b 1000 -o /home/scout3d/Bag/scout3d \
 /camera/image_raw \
 /camera/imu/data /camera/imu/data_raw /camera/imu/is_calibrated /camera/imu/mag /camera/imu/magnetic_field \
 /camera/temperature/cpu \
