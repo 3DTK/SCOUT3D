@@ -17,5 +17,6 @@
     <node name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
       <rosparam command="load" file="$(find scout3d_gnss)/param/xsens_mti_node.yaml" />
     </node>
+    <node pkg="scout3d_temperature" type="temperature_node.py" name="temperature_node"/>
   </group>
 </launch>
