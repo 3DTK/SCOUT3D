@@ -1,0 +1,45 @@
+<robot name="scout3d-rover0">
+  <material name="black">
+     <color rgba="1.0 0.5 0.0 1"/>
+  </material>
+
+  <link name="rover0_imu"/>
+  <link name="rover0_ant0"/>
+  <link name="rover0_ant1"/>
+  <link name="rover0_base">
+    <visual>
+      <origin rpy="0 0 1.570796" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://scout3d_scanner/urdf/scout3d-rover0.stl"/>
+      </geometry>
+      <material name="black"/>
+    </visual>
+  </link>
+
+  <joint name="rover0_base_to_imu" type="fixed">
+    <parent link="rover0_base"/>
+    <child link="rover0_imu"/>
+    <origin rpy="0 0 3.1415927" xyz="-0.013 0 0.062"/>
+  </joint>
+
+  <joint name="rover0_base_to_ant0" type="fixed">
+    <parent link="rover0_base"/>
+    <child link="rover0_ant0"/>
+    <origin rpy="0 0 0" xyz="0 0.5 0.0908"/>
+  </joint>
+
+  <joint name="rover0_base_to_ant1" type="fixed">
+    <parent link="rover0_base"/>
+    <child link="rover0_ant1"/>
+    <origin rpy="0 0 0" xyz="0 -0.5 0.0908"/>
+  </joint>
+
+
+  <link name="base_link"/>
+
+  <joint name="rover0_base_to_mount" type="fixed">
+    <parent link="base_link"/>
+    <child link="rover0_base"/>
+    <origin rpy="0 0 0" xyz="0 0 0"/>
+  </joint>
+</robot>
