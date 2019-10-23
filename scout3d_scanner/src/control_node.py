@@ -55,7 +55,7 @@ def processScan():
         global camera_gain
 
         if (doScan):
-            command = "rosbag record -b 1000 -o /home/scout3d/Bag/scout3d /camera/image_raw /camera/imu/data /camera/imu/data_raw /camera/imu/is_calibrated /camera/imu/mag /camera/imu/magnetic_field /camera/temperature/cpu /laser/imu/data /laser/imu/data_raw /laser/imu/is_calibrated /laser/imu/mag /laser/imu/magnetic_field /laser/temperature/cpu /laser/temperature/sensor /motor/encoder_raw /motor/motorPosition /motor/temperature/cpu"
+            command = "rosbag record -b 2048 -o /home/scout3d/Bag/scout3d /camera/image_raw /camera/imu/data /camera/imu/data_raw /camera/imu/is_calibrated /camera/imu/mag /camera/imu/magnetic_field /camera/temperature/cpu /laser/imu/data /laser/imu/data_raw /laser/imu/is_calibrated /laser/imu/mag /laser/imu/magnetic_field /laser/temperature/cpu /laser/temperature/sensor /motor/encoder_raw /motor/motorPosition /motor/temperature/cpu"
 
             setMotorPosition = rospy.ServiceProxy('/motor/setMotorPosition', MotorPositionCommand)
             setLaserPower = rospy.ServiceProxy('/laser/setLaserPower', LaserPowerCommand)
