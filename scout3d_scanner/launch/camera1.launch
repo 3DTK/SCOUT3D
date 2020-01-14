@@ -1,0 +1,27 @@
+<launch>
+  <arg name="camera_name" default="camera" />
+  <arg name="camera_serial" default="0" />
+  <arg name="calibrated" default="0" />
+
+  <group ns="camera">
+    <node pkg="nodelet" type="nodelet" name="camera_nodelet_manager" args="manager" />
+
+    <node pkg="nodelet" type="nodelet" name="spinnaker_camera_nodelet"
+          args="load spinnaker_camera_driver/SpinnakerCameraNodelet camera_nodelet_manager" >
+
+      <param name="frame_id" value="camera" />
+      <param name="serial" value="$(arg camera_serial)" />
+      <param name="acquisition_frame_rate" value="100" />
+      <param name="image_format_color_coding" value="Mono8" />
+      <param name="line_selector" value="LineSelector_Line1" />
+      <param name="line_mode" value="Output" />
+      <param name="exposure_auto" value="Off" />
+      <param name="auto_gain" value="Off" />
+      <param name="auto_white_balance" value="Once" />
+    </node>
+
+    <node pkg="scout3d_temperature" type="temperature_node.py" name="temperature_node"/>
+  </group>
+
+  <node pkg="scout3d_scanner" type="control_node.py" name="control_node"/>
+</launch>

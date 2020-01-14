@@ -1,0 +1,2 @@
+#! /bin/bash
+tmux new-session -d -s scout3d 'source /opt/ros/melodic/setup.bash;source /home/scout3d/ROS/devel/setup.bash;roslaunch scout3d_scanner camera1.launch'
