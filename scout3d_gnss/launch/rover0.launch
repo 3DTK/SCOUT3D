@@ -1,19 +1,19 @@
 <launch>
-  <group ns="rover0/ant0">
+  <group ns="rover/ant0">
     <node name="nmea_tcp_driver_node" pkg="nmea_tcp_driver" type="nmea_tcp_driver" output="screen">
       <param name="port" value="9001"/>
       <param name="host" value="localhost" />
     </node>
   </group>
 
-  <group ns="rover0/ant1">
+  <group ns="rover/ant1">
     <node name="nmea_tcp_driver_node" pkg="nmea_tcp_driver" type="nmea_tcp_driver" output="screen">
       <param name="port" value="9002"/>
       <param name="host" value="localhost" />
     </node>
   </group>
 
-  <group ns="rover0">
+  <group ns="rover">
     <node name="xsens_mti_node" pkg="xsens_mti_driver" type="xsens_mti_node" output="screen">
       <rosparam command="load" file="$(find scout3d_gnss)/param/xsens_mti_node.yaml" />
     </node>
