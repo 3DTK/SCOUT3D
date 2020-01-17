@@ -1,2 +1,3 @@
 #! /bin/bash
 tmux new-session -d -s scout3d 'export ROS_MASTER_URI=http://scout3d-camera1.local:11311;source /home/scout3d/ROS/devel/setup.bash;roslaunch --wait scout3d_gnss rover0.launch'
+tmux new-window '/home/scout3d/ROS/src/SCOUT3D/scout3d_doc/scripts/scout3d-rover0-log'
