@@ -1,0 +1,23 @@
+#! /bin/bash
+
+tracking=''
+
+while test -z "${tracking}"
+do
+tracking=`chronyc tracking | grep "Reference ID" | grep -o -P '(?<=\().*(?=\))'`
+if test -z "${tracking}"
+then
+echo "Waiting for time synchronization."
+else
+echo ${tracking}
+fi
+sleep 1
+done
+
+logdir=~/Log/`date +%Y-%m-%d-%H%M%S`/
+splitbytes=100M
+
+echo ${logdir}
+mkdir -p ${logdir}
+nc localhost 9001 | split -d -b ${splitbytes} -a 4 --additional-suffix=.ubx - ${logdir}base_ &
+watch ls -lah ${logdir}

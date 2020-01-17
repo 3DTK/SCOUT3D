@@ -1,0 +1,3 @@
+#! /bin/bash
+tmux new-session -d -s scout3d 'gpsmon -n'
+tmux new-window '/home/scout3d/ROS/src/SCOUT3D/scout3d_doc/scripts/scout3d-base0-log'
