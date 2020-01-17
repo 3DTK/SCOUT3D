@@ -1,0 +1,34 @@
+#! /bin/bash
+
+export ROS_MASTER_URI=http://scout3d-camera1.local:11311
+
+rosbag record -b 2048 -o /home/scout3d/Bag/scout3d \
+/camera/image_raw \
+/camera/imu/data /camera/imu/data_raw /camera/imu/is_calibrated /camera/imu/mag /camera/imu/magnetic_field \
+/camera/temperature/cpu \
+/laser/imu/data /laser/imu/data_raw /laser/imu/is_calibrated /laser/imu/mag /laser/imu/magnetic_field \
+/laser/temperature/cpu \
+/laser/temperature/sensor \
+/motor/encoder_raw \
+/motor/motorPosition \
+/motor/temperature/cpu \
+/rover/ant0/fix \
+/rover/ant0/heading \
+/rover/ant0/time_reference \
+/rover/ant0/vel \
+/rover/ant1/fix \
+/rover/ant1/heading \
+/rover/ant1/time_reference \
+/rover/ant1/vel \
+/rover/filter/free_acceleration \
+/rover/filter/quaternion \
+/rover/filter/twist \
+/rover/imu/acceleration \
+/rover/imu/angular_velocity \
+/rover/imu/data \
+/rover/imu/dq \
+/rover/imu/dv \
+/rover/imu/mag \
+/rover/imu/time_ref \
+/rover/temperature/cpu \
+/tf
